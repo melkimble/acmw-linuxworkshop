@@ -6,10 +6,10 @@ services:
     image: ghost
     restart: unless-stopped
     environment:
-      - url: https://yourdomain.xyz
-      - VIRTUAL_HOST: yourdomain.xyz, www.yourdomain.xyz
+      - url: "https://yourdomain.xyz"
+      - VIRTUAL_HOST: "yourdomain.xyz, www.yourdomain.xyz"
       - VIRTUAL_PORT=2368
-      - LETSENCRYPT_HOST: yourdomain.xyz, www.yourdomain.xyz
+      - LETSENCRYPT_HOST: "yourdomain.xyz, www.yourdomain.xyz"
       - LETSENCRYPT_EMAIL: youremail@email.com
     volumes:
       - ghostdata:/var/lib/ghost/content
@@ -38,7 +38,7 @@ services:
       - certs:/etc/nginx/certs
       - /var/run/docker.sock:/var/run/docker.sock:ro
     volumes_from:
-      - nginx-proxy
+      - "nginx-proxy"
     networks:
       - ghost
     restart: unless-stopped
