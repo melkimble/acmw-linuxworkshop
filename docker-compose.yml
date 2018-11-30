@@ -3,20 +3,18 @@ version: '2'
 services:
 
   ghost:
-    image: ghost:1.21.3-alpine
-    restart: always
+    image: ghost
+    restart: unless-stopped
     environment:
-      NODE_ENV: production
-      url: https://yourgoogledomain.xyz
-      VIRTUAL_HOST: yourgoogledomain.xyz
-      LETSENCRYPT_HOST: yourgoogledomain.xyz
-      LETSENCRYPT_EMAIL: <youremail@email.com>
+      - url: https://yourdomain.xyz
+      - VIRTUAL_HOST: yourdomain.xyz, www.yourdomain.xyz
+      - VIRTUAL_PORT=2368
+      - LETSENCRYPT_HOST: yourdomain.xyz, www.yourdomain.xyz
+      - LETSENCRYPT_EMAIL: youremail@email.com
     volumes:
-      - ~/data/ghost:/var/lib/ghost/content
-    links:
-      - nginx-proxy
+      - ghostdata:/var/lib/ghost/content
     networks:
-      - backend
+      - ghost
 
   nginx-proxy:
     image: jwilder/nginx-proxy
@@ -24,22 +22,30 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - "/etc/nginx/vhost.d"
-      - "/usr/share/nginx/html"
-      - "/var/run/docker.sock:/tmp/docker.sock:ro"
-      - "/etc/nginx/certs"
+      - certs:/etc/nginx/certs:ro
+      - /etc/nginx/vhost.d
+      - /usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
-      - backend
-
-  letsencrypt-nginx-proxy-companion:
+      - ghost
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: ""
+    restart: unless-stopped
+    
+  letsencrypt:
     image: jrcs/letsencrypt-nginx-proxy-companion
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - certs:/etc/nginx/certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     volumes_from:
-      - "nginx-proxy"
+      - nginx-proxy
     networks:
-      - backend
+      - ghost
+    restart: unless-stopped
       
-networks: 
-   backend:
-      driver: "bridge"
+volumes:
+  certs:
+  ghostdata:
+
+networks:
+  ghost:
