@@ -1,6 +1,7 @@
 version: '2'
 
 services:
+  network_mode: "bridge"
 
   ghost:
     image: ghost:1.21.3-alpine
