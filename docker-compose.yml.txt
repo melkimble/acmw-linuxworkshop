@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+
+  ghost:
+    image: ghost:1.21.3-alpine
+    restart: always
+    environment:
+      NODE_ENV: production
+      url: https://yourdomain.xyz
+      mail__transport: SMTP
+      mail__options__service: Mailgun
+      mail__options__auth__user: <My Mailgun User>
+      mail__options__auth__pass: <My Mailgun Password>
+      VIRTUAL_HOST: yourdomain.xyz
+      LETSENCRYPT_HOST: yourdomain.xyz
+      LETSENCRYPT_EMAIL: <My Email>
+    volumes:
+      - ~/data/ghost:/var/lib/ghost/content
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/nginx/vhost.d"
+      - "/usr/share/nginx/html"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "/etc/nginx/certs"
+
+  letsencrypt-nginx-proxy-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    volumes_from:
+      - "nginx-proxy
