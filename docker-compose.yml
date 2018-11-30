@@ -1,51 +1,41 @@
-version: '2'
-
+version: '3.1'
 services:
-
-  ghost:
-    image: ghost
-    restart: unless-stopped
-    environment:
-      - url: "https://yourdomain.xyz"
-      - VIRTUAL_HOST: "yourdomain.xyz, www.yourdomain.xyz"
-      - VIRTUAL_PORT=2368
-      - LETSENCRYPT_HOST: "yourdomain.xyz, www.yourdomain.xyz"
-      - LETSENCRYPT_EMAIL: youremail@email.com
-    volumes:
-      - ghostdata:/var/lib/ghost/content
-    networks:
-      - ghost
-
   nginx-proxy:
     image: jwilder/nginx-proxy
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - certs:/etc/nginx/certs:ro
-      - /etc/nginx/vhost.d
-      - /usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      - ghost
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - nginx.html:/usr/share/nginx/html
     labels:
-      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: ""
-    restart: unless-stopped
-    
-  letsencrypt:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+  nginx-proxy-companon:
     image: jrcs/letsencrypt-nginx-proxy-companion
-    volumes:
-      - certs:/etc/nginx/certs
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    volumes_from:
+    depends_on:
       - "nginx-proxy"
-    networks:
-      - ghost
-    restart: unless-stopped
-      
-volumes:
-  certs:
-  ghostdata:
-
-networks:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./nginx/certs:/etc/nginx/certs:rw
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - nginx.html:/usr/share/nginx/html
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
   ghost:
+    image: ghost:1-alpine
+    restart: always
+    depends_on:
+      - "nginx-proxy"
+    ports:
+      - 127.0.0.1:8080:2368
+    volumes:
+      - ./blog/data/ghost:/var/lib/ghost/content
+    environment:
+      - url=https://yourdomain.com
+      - VIRTUAL_HOST=yourdomain.com
+      - LETSENCRYPT_HOST=yourdomain.com
+      - LETSENCRYPT_EMAIL=youremail@email.com
+volumes:
+  nginx.html:
