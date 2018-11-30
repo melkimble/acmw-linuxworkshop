@@ -7,9 +7,10 @@ services:
     restart: always
     environment:
       NODE_ENV: production
-      url: https://yourdomain.xyz
-      VIRTUAL_HOST: yourdomain.xyz
-      LETSENCRYPT_HOST: yourdomain.xyz
+      url: https://yourgoogledomain.xyz
+      VIRTUAL_HOST: yourgoogledomain.xyz
+      LETSENCRYPT_HOST: yourgoogledomain.xyz
+      LETSENCRYPT_EMAIL: <youremail@email.com>
     volumes:
       - ~/data/ghost:/var/lib/ghost/content
 
